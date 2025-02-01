@@ -20,7 +20,7 @@ export class HoaPersistenceCsv implements HoaPersistence {
             // Add the header row if the file was just initialized
             if (check.initialized) {
                 await this.writeService.writeAppend(this.file_path, [
-                    ['ID', 'Name', 'Address', 'Agent Name', 'Status', 'Location']
+                    ['ID', 'Name', 'Email', 'Address', 'Agent Name', 'Status', 'Location']
                 ]);
             }
 
@@ -69,6 +69,7 @@ export class HoaPersistenceCsv implements HoaPersistence {
             return [
                 this.escapeCsvField(hoa.id),
                 this.escapeCsvField(hoa.name),
+                this.escapeCsvField(hoa.email ?? "UNAVAILABLE"),
                 this.escapeCsvField(hoa.mailing_address),
                 this.escapeCsvField(hoa.agent_name ?? "UNAVAILABLE"),
                 this.escapeCsvField(hoa.status),

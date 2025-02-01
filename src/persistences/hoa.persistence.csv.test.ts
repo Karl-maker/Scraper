@@ -45,7 +45,7 @@ describe('HoaPersistenceCsv', () => {
             expect(result).toEqual(hoas);
             expect(mockWriteService.writeAppend).toHaveBeenCalledWith('/path/to/file.csv', [[]]);
             expect(mockWriteService.writeAppend).toHaveBeenCalledWith('/path/to/file.csv', [
-                ['ID', 'Name', 'Address', 'Agent Name', 'Status', 'Location']
+                ['ID', 'Name', 'Email', 'Address', 'Agent Name', 'Status', 'Location']
             ]);
             expect(mockWriteService.writeAppend).toHaveBeenCalledWith('/path/to/file.csv', expect.arrayContaining([
                 expect.arrayContaining(['1', 'Hoa 1', '123 St', 'Agent 1', 'active', '2023-01-01']),
@@ -87,7 +87,7 @@ describe('HoaPersistenceCsv', () => {
             expect(result).toEqual(hoas);
             expect(mockWriteService.writeAppend).toHaveBeenCalledWith('/path/to/file.csv', [[]]);
             expect(mockWriteService.writeAppend).not.toHaveBeenCalledWith('/path/to/file.csv', [
-                ['ID', 'Name', 'Address', 'Agent Name', 'Status', 'Started']
+                ['ID', 'Name', 'Email', 'Address', 'Agent Name', 'Status', 'Started']
             ]);
             expect(mockWriteService.writeAppend).toHaveBeenCalledWith('/path/to/file.csv', expect.arrayContaining([
                 expect.arrayContaining(['1', 'Hoa 1', '123 St', 'Agent 1', 'active', '2023-01-01']),
@@ -108,8 +108,8 @@ describe('HoaPersistenceCsv', () => {
 
             // Assert
             expect(result).toEqual([
-                ['1', 'Hoa 1', '123 St', 'Agent 1', 'active', '2023-01-01'],
-                ['2', 'Hoa 2', '456 Ave', 'UNAVAILABLE', 'active', '2022-05-01']
+                ['1', 'Hoa 1', "UNAVAILABLE", '123 St', 'Agent 1', 'active', '2023-01-01'],
+                ['2', 'Hoa 2', "UNAVAILABLE", '456 Ave', 'UNAVAILABLE', 'active', '2022-05-01']
             ]);
         });
     });
@@ -150,7 +150,7 @@ describe('HoaPersistenceCsv', () => {
                 { id: '3', name: 'Hoa 3', mailing_address: '789 Blvd', agent_name: 'Agent 3', status: 'active', formed_in: '2021-09-15' }
             ];
     
-            const fileData = '\nID,Name,Address,Agent Name,Status,Location\n1,Hoa 1,123 St,Agent 1,active,2023-01-01\n2,Hoa 2,456 Ave,Agent 2,active,2022-05-01';
+            const fileData = '\nID,Name,Email,Address,Agent Name,Status,Location\n1,Hoa 1,123 St,Agent 1,active,2023-01-01\n2,Hoa 2,456 Ave,Agent 2,active,2022-05-01';
             (mockReadService.read as jest.Mock).mockResolvedValueOnce(fileData);
     
             // Act

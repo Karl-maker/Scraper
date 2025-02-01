@@ -13,5 +13,6 @@ export interface Hoa {
     // adent_address?: string;
     id: string;
     name: string;
+    email?: string;
 }
 

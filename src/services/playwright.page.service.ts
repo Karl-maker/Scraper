@@ -1,15 +1,49 @@
 import { Page } from 'playwright';
-import { PageService } from '../interfaces/services/i.page.service';
+import { NavigatablePage } from '../interfaces/services/i.navigatable.page.service';
+import { ClickablePage } from '../interfaces/services/i.clickable.page.service';
+import { ReadablePage } from '../interfaces/services/i.readabe.page.service';
+import { WritablePage } from '../interfaces/services/i.writable.page.service';
+import { TableReadablePage } from '../interfaces/services/i.table.readable.page.service';
+import { WaitablePage } from '../interfaces/services/i.waitable.page.service';
+import { TrackablePage } from '../interfaces/services/i.trackable.page.service';
 
-export class PlayWrightPageService implements PageService {
+export class PlayWrightPageService implements 
+  NavigatablePage,
+  ClickablePage,
+  ReadablePage,
+  WritablePage,
+  TableReadablePage,
+  WaitablePage,
+  TrackablePage
+{
   private page: Page;
 
   constructor(page: Page) {
     this.page = page;
   }
 
-  async click(selector: string): Promise<void> {
-    await this.page.click(selector);
+  async navigate(url: string) : Promise<void> {
+    await this.page.goto(url)
+  };
+
+  async goBack(): Promise<void> {
+    await this.page.goBack();
+  }
+
+  async goForward(): Promise<void> {
+    await this.page.goForward();
+  }
+
+  async refresh(): Promise<void> {
+    await this.page.reload();
+  }
+
+  async getCurrentUrl(): Promise<string> {
+    return this.page.url();
+  }
+
+  async waitForNavigation(options?: { timeout?: number; waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' }): Promise<void> {
+    await this.page.waitForNavigation(options);
   }
 
   async clickById(id: string): Promise<void> {
@@ -20,94 +54,191 @@ export class PlayWrightPageService implements PageService {
     await this.page.click(`.${className}`);
   }
 
-  async readTableData(tableClass: string, rowIndex: number, colIndex: number): Promise<string> {
-    try {
-      // Locate the cell using the table class, row index, and column index
-      const cell = this.page.locator(`.${tableClass} tr:nth-child(${rowIndex + 1}) td:nth-child(${colIndex + 1})`);
-  
-      // Ensure the cell is in the viewport
-      await cell.scrollIntoViewIfNeeded();
-  
-      // Wait for the cell to be visible
-      await cell.waitFor({ state: 'visible' });
-  
-      // Return the text content of the cell
-      return await cell.textContent() ?? "";
-    } catch (error) {
-      throw new Error(`Failed to read table data at row ${rowIndex}, column ${colIndex}: ${error}`);
-    }
+  async clickBySelector(selector: string): Promise<void> {
+    await this.page.click(selector);
   }
 
-  async clickTableCell(tableClass: string, rowIndex: number, colIndex: number): Promise<void> {
-    await this.page.click(`.${tableClass} tr:nth-child(${rowIndex + 1}) td:nth-child(${colIndex + 1})`);
+  async clickByText(text: string): Promise<void> {
+    await this.page.click(`text=${text}`);
   }
 
-  async clickTableRow(rowIndex: number): Promise<void> {
-    await this.page.click(`table tr:nth-child(${rowIndex + 1})`);
+  async getTextById(id: string): Promise<string> {
+    return await this.page.textContent(`#${id}`) ?? '';
   }
 
-  async readText(selector: string): Promise<string> {
-    const element = await this.page.locator(selector);
-    return await element.textContent() ?? "";
+  async getTextByClass(className: string): Promise<string> {
+    return await this.page.textContent(`.${className}`) ?? '';
   }
 
-  async waitForElement(selector: string, timeout: number = 30000): Promise<void> {
-    await this.page.waitForSelector(selector, { timeout, state: 'visible' });
+  async getTextBySelector(selector: string): Promise<string> {
+    return await this.page.textContent(selector) ?? '';
   }
 
-  async typeIntoField(selector: string, text: string, timeout: number = 30000): Promise<void> {
-    // Wait for the element to be visible before interacting with it
-    await this.page.waitForSelector(selector, { state: 'visible', timeout });
-    // Fill the input field
+  async getAttributeBySelector(selector: string, attribute: string): Promise<string | null> {
+    return await this.page.getAttribute(selector, attribute);
+  }
+
+  async getInnerHTMLBySelector(selector: string): Promise<string> {
+    return await this.page.innerHTML(selector);
+  }
+
+  async getOuterHTMLBySelector(selector: string): Promise<string> {
+    return await this.page.evaluate((selector) => {
+      const element = document.querySelector(selector);
+      return element ? element.outerHTML : '';
+    }, selector);
+  }
+
+  async typeById(id: string, text: string): Promise<void> {
+    await this.page.fill(`#${id}`, text);
+  }
+
+  async typeByClass(className: string, text: string): Promise<void> {
+    await this.page.fill(`.${className}`, text);
+  }
+
+  async typeBySelector(selector: string, text: string): Promise<void> {
     await this.page.fill(selector, text);
   }
 
-  async selectFromDropdown(selector: string, optionText: string, timeout: number = 30000): Promise<void> {
-    // Wait for the dropdown to be visible before interacting with it
-    await this.page.waitForSelector(selector, { state: 'visible', timeout });
-    await this.page.selectOption(selector, { label: optionText });
+  async clearById(id: string): Promise<void> {
+    await this.page.fill(`#${id}`, '');
   }
 
-  async submitForm(selector: string): Promise<void> {
-    await this.page.click(`${selector} button[type="submit"]`);
+  async clearByClass(className: string): Promise<void> {
+    await this.page.fill(`.${className}`, '');
   }
 
-  async getElementAttribute(selector: string, attribute: string): Promise<string> {
-    const element = await this.page.locator(selector);
-    return await element.getAttribute(attribute) ?? "";
+  async clearBySelector(selector: string): Promise<void> {
+    await this.page.fill(selector, '');
   }
 
-  async enterTextByClassName(className: string, text: string, timeout: number = 30000): Promise<void> {
-    const inputSelector = `.${className}`;
-    // Wait for the input element to be visible before filling it
-    await this.page.waitForSelector(inputSelector, { state: 'visible', timeout });
-    await this.page.fill(inputSelector, text);
+  async selectOptionById(id: string, value: string): Promise<void> {
+    await this.page.selectOption(`#${id}`, value);
   }
 
-  async countTableRows(tableClass: string): Promise<number> {
-    const rows = await this.page.locator(`.${tableClass} tr`);
-    return await rows.count();
+  async selectOptionBySelector(selector: string, value: string): Promise<void> {
+    await this.page.selectOption(selector, value);
   }
 
-  async scrollToBottomSlowly(scrollStep: number = 100, scrollDelay: number = 200): Promise<void> {
-    await this.page.evaluate(async (step) => {
-      // Scroll down incrementally
-      const scrollHeight = document.documentElement.scrollHeight;
-      let currentScroll = 0;
+  async checkCheckboxById(id: string): Promise<void> {
+    await this.page.check(`#${id}`);
+  }
 
-      const scrollInterval = setInterval(() => {
-        // Scroll down by the step size
-        window.scrollBy(0, step);
-        currentScroll += step;
+  async checkCheckboxBySelector(selector: string): Promise<void> {
+    await this.page.check(selector);
+  }
 
-        // Stop scrolling if we've reached the bottom
-        if (currentScroll >= scrollHeight) {
-          clearInterval(scrollInterval);
-        }
-      });
-    }, scrollStep);
+  async uncheckCheckboxById(id: string): Promise<void> {
+    await this.page.uncheck(`#${id}`);
+  }
 
-    // Wait for the page to settle after scrolling
-    await this.page.waitForTimeout(scrollDelay * 2);
+  async uncheckCheckboxBySelector(selector: string): Promise<void> {
+    await this.page.uncheck(selector);
+  }
+
+  async getTableDataById(id: string): Promise<string[][]> {
+    return this.getTableDataBySelector(`#${id}`);
+  }
+
+  async getTableDataBySelector(selector: string, skipCount: number = 0): Promise<string[][]> {
+    return await this.page.evaluate(
+      ({ selector, skipCount }: { selector: string; skipCount: number }) => {
+        const tables = Array.from(document.querySelectorAll(selector));
+  
+        // Skip the first `skipCount` tables
+        const tablesToProcess = tables.slice(skipCount);
+  
+        const allData: string[][] = [];
+  
+        tablesToProcess.forEach((table) => {
+          const rows = Array.from(table.querySelectorAll('tr'));
+  
+          // Extract data from the rows
+          const tableData = rows.map((row) => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map((cell) => cell.textContent?.trim() || '');
+          });
+  
+          // Filter out empty rows (rows with no cells or all empty cells)
+          const filteredTableData = tableData.filter((row) =>
+            row.some((cell) => cell.length > 0)
+          );
+  
+          // Add the filtered data to the final result
+          allData.push(...filteredTableData);
+        });
+  
+        return allData; // Return combined data from the tables processed
+      },
+      { selector, skipCount } // Pass arguments as a single object
+    );
+  }
+
+  async getTableByFirstTrTagSelector(selector: string): Promise<string[][]> {
+    return await this.page.evaluate((selector) => {
+      const firstTr = document.querySelector(selector);
+      if (!firstTr) return []; // If the first tr element is not found, return an empty array
+
+      // Start from the next sibling of the first tr element
+      let currentRow = firstTr.nextElementSibling;
+      const allData: string[][] = [];
+
+      // Loop through each subsequent tr element
+      while (currentRow) {
+        const cells = Array.from(currentRow.querySelectorAll('th, td')).map(cell => cell.textContent?.trim() || '');
+        allData.push(cells);
+        currentRow = currentRow.nextElementSibling; // Move to the next tr element
+      }
+
+      return allData; // Return the array of data
+    }, selector);
+  }
+
+  async waitForSelector(selector: string, timeout: number = 5000): Promise<void> {
+    await this.page.waitForSelector(selector, { timeout });
+  }
+
+  async waitForText(text: string, timeout: number = 5000): Promise<void> {
+    await this.page.waitForFunction(
+      (text) => document.body.innerText.includes(text),
+      text,
+      { timeout }
+    );
+  }
+
+  async waitForUrl(url: string, timeout: number = 5000): Promise<void> {
+    await this.page.waitForURL(url, { timeout });
+  }
+
+  async waitForNetworkIdle(timeout: number = 5000): Promise<void> {
+    await this.page.waitForLoadState('networkidle', { timeout });
+  }
+
+  async waitForTimeout(milliseconds: number): Promise<void> {
+    await this.page.waitForTimeout(milliseconds);
+  }
+
+  async scrollToElement(selector: string): Promise<void> {
+    await this.page.locator(selector).scrollIntoViewIfNeeded();
+  }
+
+  async scrollToBottom(): Promise<void> {
+    await this.page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  }
+
+  async scrollToTop(): Promise<void> {
+    await this.page.evaluate(() => window.scrollTo(0, 0));
+  }
+
+  async scrollToPosition(x: number, y: number): Promise<void> {
+    await this.page.evaluate(([x, y]) => window.scrollTo(x, y), [x, y]);
+  }
+
+  async scrollIntoViewIfNeeded(selector: string): Promise<void> {
+    const element = await this.page.$(selector);
+    if (element) {
+      await element.scrollIntoViewIfNeeded();
+    }
   }
 }
